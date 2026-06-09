@@ -6,44 +6,39 @@
   <title>Barcode Scanner</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Segoe UI',system-ui,sans-serif;background:#0F172A;color:#F1F5F9;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
-    h1{font-size:18px;font-weight:700;color:#60A5FA;margin-bottom:2px;margin-top:4px}
-    .sub{font-size:12px;color:#94A3B8;margin-bottom:12px;text-align:center}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:#0F172A;color:#F1F5F9;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px;gap:10px}
+    h1{font-size:18px;font-weight:700;color:#60A5FA;margin-top:4px}
+    .sub{font-size:12px;color:#94A3B8;text-align:center;margin-top:-6px}
 
-    .video-wrap{width:100%;max-width:440px;position:relative;border-radius:14px;overflow:hidden;border:2px solid #3B82F6;background:#000}
-    video{width:100%;display:block;max-height:55vh;object-fit:cover}
+    #interactive{width:100%;max-width:440px;position:relative;border-radius:14px;overflow:hidden;border:2px solid #3B82F6;background:#000;min-height:260px}
+    #interactive video{width:100%!important;height:auto!important;display:block}
+    #interactive canvas.drawingBuffer{position:absolute;top:0;left:0;width:100%!important;height:100%!important}
 
-    /* Scanning line animation */
-    .scan-line{position:absolute;left:5%;right:5%;height:3px;background:rgba(59,130,246,0.9);border-radius:2px;animation:scanMove 1.8s ease-in-out infinite;box-shadow:0 0 8px rgba(59,130,246,0.8)}
-    @keyframes scanMove{0%,100%{top:10%}50%{top:88%}}
-
-    /* Corner brackets */
-    .corner{position:absolute;width:28px;height:28px;border-color:#3B82F6;border-style:solid}
+    .scan-line{position:absolute;left:0;right:0;height:3px;background:rgba(59,130,246,0.9);border-radius:2px;animation:scanMove 1.8s ease-in-out infinite;box-shadow:0 0 8px rgba(59,130,246,0.8);pointer-events:none;z-index:10}
+    @keyframes scanMove{0%,100%{top:5%}50%{top:90%}}
+    .corner{position:absolute;width:26px;height:26px;border-color:#3B82F6;border-style:solid;z-index:10}
     .corner.tl{top:8px;left:8px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
     .corner.tr{top:8px;right:8px;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
     .corner.bl{bottom:8px;left:8px;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
     .corner.br{bottom:8px;right:8px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
 
-    /* Status bar */
-    .status-bar{width:100%;max-width:440px;margin-top:10px;background:#1E293B;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;border:1px solid #334155}
-    .status-dot{width:10px;height:10px;border-radius:50%;background:#64748B;flex-shrink:0;transition:background 0.3s}
-    .status-dot.green{background:#22C55E;box-shadow:0 0 6px #22C55E}
-    .status-dot.blue{background:#3B82F6;animation:pulse 0.6s ease infinite alternate}
-    @keyframes pulse{from{opacity:0.4}to{opacity:1}}
-    .status-text{font-size:13px;color:#CBD5E1}
+    .status-bar{width:100%;max-width:440px;background:#1E293B;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;border:1px solid #334155}
+    .dot{width:10px;height:10px;border-radius:50%;background:#64748B;flex-shrink:0;transition:background 0.3s}
+    .dot.green{background:#22C55E;box-shadow:0 0 6px #22C55E}
+    .dot.scan{background:#3B82F6;animation:pulse 0.5s ease infinite alternate}
+    @keyframes pulse{from{opacity:0.3}to{opacity:1}}
+    #statusText{font-size:13px;color:#CBD5E1}
 
-    /* Last scanned */
-    .last-scan{width:100%;max-width:440px;margin-top:8px;background:#1E3A5F;border:1px solid #3B82F6;border-radius:10px;padding:12px 14px;display:none}
+    .last-scan{width:100%;max-width:440px;background:#1E3A5F;border:1.5px solid #3B82F6;border-radius:10px;padding:12px 14px;display:none}
     .last-scan.show{display:block}
     .ls-label{font-size:10px;color:#64748B;text-transform:uppercase;letter-spacing:0.06em}
-    .ls-code{font-family:'Courier New',monospace;font-size:20px;font-weight:700;color:#60A5FA;margin-top:2px;word-break:break-all}
-    .ls-meta{font-size:12px;color:#94A3B8;margin-top:2px}
+    .ls-code{font-family:'Courier New',monospace;font-size:22px;font-weight:700;color:#60A5FA;margin-top:2px;word-break:break-all}
+    .ls-meta{font-size:12px;color:#94A3B8;margin-top:3px}
 
-    /* Log */
-    .log-wrap{width:100%;max-width:440px;margin-top:8px;background:#1E293B;border:1px solid #334155;border-radius:10px;overflow:hidden;flex-shrink:0}
+    .log-wrap{width:100%;max-width:440px;background:#1E293B;border:1px solid #334155;border-radius:10px;overflow:hidden}
     .log-head{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid #334155;font-size:11px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:0.06em}
     .log-badge{background:#1D4ED8;color:white;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700}
-    .log-scroll{max-height:130px;overflow-y:auto}
+    .log-scroll{max-height:140px;overflow-y:auto}
     .log-empty{padding:14px;text-align:center;color:#475569;font-size:13px}
     .log-row{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid #0F172A;animation:fadeIn 0.2s ease}
     .log-row:last-child{border-bottom:none}
@@ -51,36 +46,26 @@
     .lc{font-family:'Courier New',monospace;font-size:13px;color:#CBD5E1;flex:1;margin-right:8px;word-break:break-all}
     .lp{background:#1D4ED8;color:#BFDBFE;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;flex-shrink:0}
 
-    /* Done button */
-    .done-btn{width:100%;max-width:440px;margin-top:10px;background:#185FA5;color:white;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;transition:background 0.2s;margin-bottom:16px}
+    .done-btn{width:100%;max-width:440px;background:#185FA5;color:white;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:8px}
     .done-btn:active{background:#1D4ED8;transform:scale(0.98)}
 
-    /* Flash */
-    .flash{position:fixed;inset:0;background:rgba(255,255,255,0.25);pointer-events:none;opacity:0;transition:opacity 0.06s;z-index:99}
+    .flash{position:fixed;inset:0;background:rgba(255,255,255,0.3);pointer-events:none;opacity:0;transition:opacity 0.05s;z-index:99}
     .flash.on{opacity:1}
-
-    /* Success overlay on scan */
-    .scan-success{position:absolute;inset:0;background:rgba(34,197,94,0.15);opacity:0;transition:opacity 0.1s;pointer-events:none;border-radius:12px}
-    .scan-success.on{opacity:1}
   </style>
 </head>
 <body>
   <h1>📷 Barcode Scanner</h1>
-  <p class="sub">Hold barcode steady in the blue box</p>
+  <p class="sub">Hold barcode steady — auto detected</p>
 
-  <div class="video-wrap" id="videoWrap">
-    <video id="video" autoplay muted playsinline></video>
+  <div id="interactive">
     <div class="scan-line"></div>
-    <div class="corner tl"></div>
-    <div class="corner tr"></div>
-    <div class="corner bl"></div>
-    <div class="corner br"></div>
-    <div class="scan-success" id="scanSuccess"></div>
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
   </div>
 
   <div class="status-bar">
-    <div class="status-dot" id="statusDot"></div>
-    <span class="status-text" id="statusText">Starting camera...</span>
+    <div class="dot" id="dot"></div>
+    <span id="statusText">Loading scanner...</span>
   </div>
 
   <div class="last-scan" id="lastScan">
@@ -90,156 +75,102 @@
   </div>
 
   <div class="log-wrap">
-    <div class="log-head">
-      Session <span class="log-badge" id="logBadge">0</span>
-    </div>
-    <div class="log-scroll" id="logBody">
-      <div class="log-empty">Waiting for scan...</div>
-    </div>
+    <div class="log-head">Session <span class="log-badge" id="logBadge">0</span></div>
+    <div class="log-scroll" id="logBody"><div class="log-empty">Waiting for scan...</div></div>
   </div>
 
   <button class="done-btn" onclick="sendBack()">✅ Done — Send to Main App</button>
   <div class="flash" id="flash"></div>
 
-  <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
   <script>
-    let items={}, total=0, lastCode='', lastTime=0, stream=null;
+    let items={}, total=0, lastCode='', lastTime=0;
 
     function setStatus(type, text){
-      const dot = document.getElementById('statusDot');
-      dot.className = 'status-dot ' + (type||'');
-      document.getElementById('statusText').textContent = text;
+      document.getElementById('dot').className='dot '+(type||'');
+      document.getElementById('statusText').textContent=text;
     }
 
-    async function init(){
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video:{
-            facingMode:{ideal:'environment'},
-            width:{ideal:1920},
-            height:{ideal:1080},
-            focusMode: {ideal: 'continuous'}
-          },
-          audio:false
-        });
-        const video = document.getElementById('video');
-        video.srcObject = stream;
-        await video.play();
-        setStatus('green','Camera ready — point at barcode');
-        startDecode(video);
-      } catch(e){
-        let msg = 'Camera error';
-        if(e.name==='NotAllowedError') msg='Allow camera access and reload.';
-        if(e.name==='NotFoundError') msg='No camera found.';
-        setStatus('','❌ ' + msg);
+    Quagga.init({
+      inputStream:{
+        name:'Live',
+        type:'LiveStream',
+        target: document.getElementById('interactive'),
+        constraints:{
+          facingMode:'environment',
+          width:{min:640, ideal:1280, max:1920},
+          height:{min:480, ideal:720, max:1080}
+        },
+        area:{top:'0%',right:'0%',left:'0%',bottom:'0%'}
+      },
+      frequency: 20,
+      decoder:{
+        readers:[
+          'ean_reader',
+          'ean_8_reader',
+          'code_128_reader',
+          'code_39_reader',
+          'upc_reader',
+          'upc_e_reader',
+          'itf_reader',
+          'codabar_reader'
+        ],
+        multiple: false
+      },
+      locate: true,
+      locator:{
+        patchSize:'medium',
+        halfSample: true
       }
-    }
-
-    function startDecode(video){
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
-      const hints = new Map();
-      hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[
-        ZXing.BarcodeFormat.EAN_13,
-        ZXing.BarcodeFormat.EAN_8,
-        ZXing.BarcodeFormat.CODE_128,
-        ZXing.BarcodeFormat.CODE_39,
-        ZXing.BarcodeFormat.UPC_A,
-        ZXing.BarcodeFormat.UPC_E,
-        ZXing.BarcodeFormat.ITF,
-        ZXing.BarcodeFormat.QR_CODE,
-        ZXing.BarcodeFormat.DATA_MATRIX
-      ]);
-      hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-
-      const reader = new ZXing.MultiFormatReader();
-      reader.setHints(hints);
-
-      let frameCount = 0;
-
-      function decode(){
-        frameCount++;
-        // Process every frame for faster detection
-        try {
-          if(video.readyState >= 2 && video.videoWidth > 0){
-            canvas.width  = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video,0,0,canvas.width,canvas.height);
-
-            // Try full image first
-            if(tryDecode(ctx, canvas, reader)) { requestAnimationFrame(decode); return; }
-
-            // Also try center crop — where barcode usually is
-            const cropW = Math.floor(canvas.width * 0.8);
-            const cropH = Math.floor(canvas.height * 0.5);
-            const cropX = Math.floor((canvas.width - cropW)/2);
-            const cropY = Math.floor((canvas.height - cropH)/2);
-            const cropCanvas = document.createElement('canvas');
-            cropCanvas.width = cropW;
-            cropCanvas.height = cropH;
-            cropCanvas.getContext('2d').drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-            tryDecode(cropCanvas.getContext('2d'), cropCanvas, reader);
-          }
-        } catch(e){}
-        requestAnimationFrame(decode);
+    }, function(err){
+      if(err){
+        setStatus('','❌ Camera error: '+err.message);
+        return;
       }
-      requestAnimationFrame(decode);
-    }
+      Quagga.start();
+      setStatus('green','Camera ready — point at barcode');
+    });
 
-    function tryDecode(ctx, canvas, reader){
-      try {
-        const img = ctx.getImageData(0,0,canvas.width,canvas.height);
-        const lum = new ZXing.RGBLuminanceSource(img.data,canvas.width,canvas.height);
-        const bin = new ZXing.HybridBinarizer(lum);
-        const bmp = new ZXing.BinaryBitmap(bin);
-        const result = reader.decode(bmp);
-        if(result && result.text){
-          const now = Date.now();
-          if(result.text !== lastCode || now - lastTime > 2500){
-            lastCode = result.text;
-            lastTime = now;
-            onScan(result.text);
-          }
-          return true;
-        }
-      } catch(e){}
-      return false;
-    }
+    Quagga.onDetected(function(result){
+      const code = result.codeResult.code;
+      if(!code) return;
 
-    function onScan(code){
-      items[code] = (items[code]||0) + 1;
+      const now = Date.now();
+      if(code === lastCode && now - lastTime < 2500) return;
+
+      lastCode = code;
+      lastTime = now;
+
+      items[code] = (items[code]||0)+1;
       total++;
 
-      // Last scan display
       document.getElementById('lastScan').classList.add('show');
       document.getElementById('lsCode').textContent = code;
-      document.getElementById('lsMeta').textContent = 'Count: ' + items[code] + '  |  Total scanned: ' + total;
+      document.getElementById('lsMeta').textContent = 'Count: '+items[code]+'  |  Total: '+total;
 
       updateLog();
       doFlash();
-      scanFeedback();
       beep();
       setStatus('green','✅ Scanned! Ready for next...');
-    }
+    });
 
     function updateLog(){
-      const keys = Object.keys(items);
-      document.getElementById('logBadge').textContent = total;
+      const keys=Object.keys(items);
+      document.getElementById('logBadge').textContent=total;
       if(!keys.length){
         document.getElementById('logBody').innerHTML='<div class="log-empty">Waiting for scan...</div>';
         return;
       }
-      document.getElementById('logBody').innerHTML = keys.slice().reverse().map(k=>
+      document.getElementById('logBody').innerHTML=keys.slice().reverse().map(k=>
         `<div class="log-row"><span class="lc">${k}</span><span class="lp">×${items[k]}</span></div>`
       ).join('');
     }
 
     function sendBack(){
-      if(window.opener && !window.opener.closed){
-        window.opener.postMessage({type:'SCANNER_DATA', items:items},'*');
+      if(window.opener&&!window.opener.closed){
+        window.opener.postMessage({type:'SCANNER_DATA',items:items},'*');
       }
-      if(stream) stream.getTracks().forEach(t=>t.stop());
+      Quagga.stop();
       window.close();
     }
 
@@ -249,25 +180,17 @@
       setTimeout(()=>f.classList.remove('on'),100);
     }
 
-    function scanFeedback(){
-      const s=document.getElementById('scanSuccess');
-      s.classList.add('on');
-      setTimeout(()=>s.classList.remove('on'),300);
-    }
-
     function beep(){
       try{
         const ctx=new(window.AudioContext||window.webkitAudioContext)();
         const o=ctx.createOscillator(),g=ctx.createGain();
         o.connect(g);g.connect(ctx.destination);
         o.type='sine';o.frequency.value=1047;
-        g.gain.setValueAtTime(0.1,ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.12);
-        o.start();o.stop(ctx.currentTime+0.12);
+        g.gain.setValueAtTime(0.15,ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.15);
+        o.start();o.stop(ctx.currentTime+0.15);
       }catch(e){}
     }
-
-    init();
   </script>
 </body>
 </html>
